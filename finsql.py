@@ -59,14 +59,14 @@ class AssetItem:
         self.cats[cat] = type
     def to_json(self):
         return {
-            "name" : self.name,
-            "account": self.acc.name,
+            "Name" : self.name,
+            "Account": self.acc.name,
             "Category" : self.cats
         }
     def to_df(self):
         data = {
-            "account" : self.acc.name,
-            "name" : self.name,
+            "Account" : self.acc.name,
+            "Name" : self.name,
         }
         data.update(self.cats)
         data = {k:[v] for k,v in data.items()}
@@ -80,7 +80,7 @@ class Account:
     def add_asset(self, asset:AssetItem):
         self.asset_list.append(asset)
     def to_json(self):
-        return {"name" : self.name}
+        return {"Name" : self.name}
     def to_df(self):
         df = pd.DataFrame()
         for asset in self.asset_list:

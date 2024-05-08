@@ -27,7 +27,3 @@ st.session_state['context'] = context
 
 chart = context.asset_chart()
 st.plotly_chart(chart, theme="streamlit", use_container_width=True)
-
-#df = pd.read_csv(data_path)
-#chart_data = df[["DATE", "NET_WORTH", "MONTH_INVESTMENT", "MONTH_PROFIT"]]
-#st.line_chart(chart_data, x="DATE")

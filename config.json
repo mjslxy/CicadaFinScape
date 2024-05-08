@@ -1,33 +1,35 @@
 {
     "Categories": {
-        "Risk" : [
+        "Risk": [
             "High",
             "Low"
+        ],
+        "test": [
+            "0",
+            "1"
         ]
     },
-
     "Accounts": [
         {
-            "name": "NVIDIA"
+            "Name": "NVIDIA"
         },
         {
-            "name": "THS"
+            "Name": "THS"
         }
     ],
-
     "Assets": [
         {
-            "name": "NVIDIA",
-            "account": "NVIDIA",
-            "Category" : {
-                "Risk" : "High"
+            "Name": "NVIDIA",
+            "Account": "NVIDIA",
+            "Category": {
+                "Risk": "High"
             }
         },
         {
-            "name": "A-share",
-            "account": "THS",
-            "Category" : {
-                "Risk" : "High"
+            "Name": "A-share",
+            "Account": "THS",
+            "Category": {
+                "Risk": "High"
             }
         }
     ]

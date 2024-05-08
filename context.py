@@ -11,35 +11,35 @@ class FinContext:
         self.db_path = db_path
         with open(config_path) as f:
             self.config = json.load(f)
-        self.cats:dict = {}
+        self.cat_dict:dict = {}
         self.acc:dict[str,Account] = {}
         self.fsql = FinSQL(self.db_path)
 
         print(self.config)
 
         if "Categories" in self.config:
-            self.cats = self.config["Categories"]
+            self.cat_dict = self.config["Categories"]
         
         if "Accounts" in self.config:
             for i in self.config["Accounts"]:
-                self.acc[i["name"]] = Account(i["name"])
+                self.acc[i["Name"]] = Account(i["Name"])
         
         if "Assets" in self.config:
             for i in self.config["Assets"]:
-                acc_name = i["account"]
+                acc_name = i["Account"]
                 assert(acc_name in self.acc)
                 acc = self.acc[acc_name]
-                asset = AssetItem(i["name"], acc)
+                asset = AssetItem(i["Name"], acc)
                 if "Category" in i:
                     for cat,type in i["Category"].items():
-                        assert(cat in self.cats and type in self.cats[cat])
+                        assert(cat in self.cat_dict and type in self.cat_dict[cat])
                         asset.add_cat(cat,type)
                 acc.add_asset(asset)
     
     def write_config(self):
         config = {}
-        if self.cats:
-            config["Categories"] = self.cats
+        if self.cat_dict:
+            config["Categories"] = self.cat_dict
         if self.acc:
             accs = [v.to_json() for k,v in self.acc.items()]
             config["Accounts"] = accs
@@ -52,7 +52,7 @@ class FinContext:
             config["Assets"] = assets
             
         with open(self.config_path, 'w') as f:
-            json.dump(config, f)
+            json.dump(config, f, indent=4)
     
     def init_db_from_csv(self, csv_path):
         with self.fsql as s:
@@ -81,10 +81,33 @@ class FinContext:
         return fig
     
     def account_df(self):
+        cols = ["Account", "Name"]
+        cols.extend([k for k in self.cat_dict])
         df = pd.DataFrame()
         for k,v in self.acc.items():
-            print(k)
-            print(v)
-            df = pd.concat([df,v.to_df()])
+            df = pd.concat([df,v.to_df()], ignore_index=True)
         return df
+
+    def account_from_df(self, df:pd.DataFrame):
+        pass
+    
+    def category_df(self):
+        cat = [[k, ','.join(v)] for k,v in self.cat_dict.items()]
+        cat_df = pd.DataFrame(cat, columns=["Category", "Labels"])
+        return cat_df
+    
+    def category_from_df(self, df:pd.DataFrame):
+        cat_dict = {}
+        for index, row in df.iterrows():
+            name:str = row["Category"]
+            labels:str = row["Labels"]
+            cat_dict[name] = labels.split(',')
+        self.cat_dict = cat_dict
+        print("============================================")
+        print(self.cat_dict)
+        self.write_config()
+        
+        
+            
+        
         
