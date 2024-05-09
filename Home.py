@@ -6,6 +6,8 @@ import os
 import finsql as finsql
 from context import FinContext
 
+import streamlit as st
+
 st.set_page_config(
     page_title="Monthly Financial Dashboard",
     page_icon="👋"

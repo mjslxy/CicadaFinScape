@@ -70,8 +70,15 @@ class AssetItem:
         }
         data.update(self.cats)
         data = {k:[v] for k,v in data.items()}
-        print(data)
         return pd.DataFrame.from_dict(data)
+    def add_to_df(self, df:pd.DataFrame):
+        data = {
+            "Account" : self.acc.name,
+            "Name" : self.name,
+        }
+        data.update(self.cats)
+        data = [data[x] if x in data else None for x in df.columns]
+        df.loc[len(df)] = data
 
 class Account:
     def __init__(self, name:str):
@@ -84,10 +91,13 @@ class Account:
     def to_df(self):
         df = pd.DataFrame()
         for asset in self.asset_list:
-            print(asset.name)
             df = pd.concat([df, asset.to_df()])
         print(df)
         return df
+    def add_to_df(self, df:pd.DataFrame):
+        for asset in self.asset_list:
+            asset.add_to_df(df)
+            
 
 class AssetTable:
     def __init__(self, accounts:list[Account]):

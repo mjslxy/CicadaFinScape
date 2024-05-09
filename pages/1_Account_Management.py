@@ -1,13 +1,18 @@
 import sys
 import streamlit as st
 import pandas as pd
+import re
 sys.path.append("..")
 from context import FinContext
 context:FinContext = st.session_state['context']
 
-keys = ["acc_cat_df_key", "acc_acc_toggle"]
+keys = ["acc_cat_df_key", "acc_acc_toggle", "acc_new_acc_toggle"]
+
+def incre_str(s):
+    return re.sub(r'(?:(\d+))?$', lambda x: '_0' if x.group(1) is None else str(int(x.group(1)) + 1), s)
+
 def s_incre(s):
-    st.session_state[s] = st.session_state[s] + 1
+    st.session_state[s] = incre_str(st.session_state[s])
 
 def k_incre_all():
     for key in keys:
@@ -16,7 +21,7 @@ def k_incre_all():
 def k_init_all():
     for key in keys:
         if key not in st.session_state:
-            st.session_state[key] = 0
+            st.session_state[key] = f"{key}_0"
 
 k_init_all()
 
@@ -45,17 +50,38 @@ with col2:
         k_incre_all()
         st.rerun()
 
+@st.experimental_dialog("New asset")
+def add_asset():
+    context:FinContext = st.session_state['context']
+    edit_on = st.toggle("New Account", key = st.session_state["acc_new_acc_toggle"])
+    acc_name = ""
+    if not edit_on:
+        acc_name = st.selectbox("Select Account", [v.name for k,v in context.acc.items()])
+    else:
+        acc_name = st.text_input("New Account")
+    
+    asset_name = st.text_input("New Asset")
 
+    cats = {}
+    for k,v in context.cat_dict.items():
+        cats[k] = st.selectbox(f"Category {k}:", v)
+    
+    if st.button("Submit", on_click=FinContext.add_asset, args=(context, acc_name, asset_name, cats), type="primary", key="acc_new_acc_submit"):
+        st.rerun()
+    
 # Accounts
 st.subheader("Accounts")
-
 edit_on = st.toggle("Edit", key = st.session_state["acc_acc_toggle"])
 if not edit_on:
     st.table(context.account_df())
+    if st.button("Add asset", type="primary", key="acc_add_asset"):
+        add_asset()
 else:
+    col_config = {k : st.column_config.SelectboxColumn(k, options=v) for k,v in context.cat_dict.items()}
     df = st.data_editor (
         context.account_df(),
         hide_index=True,
-        num_rows="dynamic"
+        num_rows="dynamic",
+        column_config=col_config
     )
     st.button("Commit", on_click=FinContext.account_from_df, args=(context, df), type="primary", key="acc_acc_df_commit")

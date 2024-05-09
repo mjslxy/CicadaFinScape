@@ -15,8 +15,6 @@ class FinContext:
         self.acc:dict[str,Account] = {}
         self.fsql = FinSQL(self.db_path)
 
-        print(self.config)
-
         if "Categories" in self.config:
             self.cat_dict = self.config["Categories"]
         
@@ -64,7 +62,6 @@ class FinContext:
         cols = ["DATE", "ACCOUNT", "NAME", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]
         with self.fsql as s:
             r = s.query_all_asset()
-            print(r)
             df = pd.DataFrame(r, columns=cols)
 
         df["ASSET"] = df['ACCOUNT'] + '-' + df['NAME']
@@ -75,7 +72,6 @@ class FinContext:
         df = self.asset_table()
         df_sum = df.copy()
         df_sum = df_sum.groupby("DATE")["NET_WORTH"].sum().reset_index()
-        print(df_sum)
         fig = px.line(df, x='DATE', y='NET_WORTH', color="ASSET")
         fig.add_bar(x=df_sum["DATE"], y=df_sum["NET_WORTH"], name="TOTAL")
         return fig
@@ -83,13 +79,21 @@ class FinContext:
     def account_df(self):
         cols = ["Account", "Name"]
         cols.extend([k for k in self.cat_dict])
-        df = pd.DataFrame()
+        df = pd.DataFrame(columns=cols)
         for k,v in self.acc.items():
-            df = pd.concat([df,v.to_df()], ignore_index=True)
+            v.add_to_df(df)
         return df
 
     def account_from_df(self, df:pd.DataFrame):
-        pass
+        for index, row in df.iterrows():
+            acc_name = row["Account"]
+            asset_name = row["Name"]
+            if acc_name in self.acc:
+                acc = self.acc[acc_name]
+                for asset in acc.asset_list:
+                    if asset.name == asset_name:
+                        pass
+                
     
     def category_df(self):
         cat = [[k, ','.join(v)] for k,v in self.cat_dict.items()]
@@ -103,9 +107,20 @@ class FinContext:
             labels:str = row["Labels"]
             cat_dict[name] = labels.split(',')
         self.cat_dict = cat_dict
-        print("============================================")
-        print(self.cat_dict)
         self.write_config()
+    
+    def add_asset(self, acc_name, asset_name, cats:dict):
+        if acc_name not in self.acc:
+            self.acc[acc_name] = Account(acc_name)
+        
+        acc = self.acc[acc_name]
+        asset = AssetItem(asset_name, acc)
+        for k,v in cats.items():
+            asset.add_cat(k,v)
+        acc.add_asset(asset)
+        self.write_config()
+            
+            
         
         
             
