@@ -3,6 +3,7 @@ import sqlite3
 import copy
 import csv
 import pandas as pd
+from st_utils import FinLogger
 
 class SQLColDef:
     def __init__(self, name:str = "", type:str = "", constraint:str = ""):
@@ -112,6 +113,7 @@ class FinSQL:
         self.db:sqlite3.Connection = None
     
     def __enter__(self):
+        print(self.db_path)
         self.db = sqlite3.connect(self.db_path)
         return self
     
@@ -124,12 +126,11 @@ class FinSQL:
     def exec(self, exec_str):
         print(exec_str)
         return self.db.execute(exec_str)
-        
     
     def clear_db(self):
         tables = self._get_tables()
-        for table_name in tables:
-            self.exec(f"DROP TABLE IF EXISTS {table_name[0]}")
+        for table in tables:
+            self.exec(f"DROP TABLE IF EXISTS {table[0]}")
         self.db.commit()
 
     def initial_db(self):
@@ -140,6 +141,17 @@ class FinSQL:
         self.exec(ASSET_TABLE.create_table_str())
         self.db.commit()
     
+    def validate_db(self):
+        tables = self._get_tables()
+        for table in tables:
+            if not table[0] == ASSET_TABLE.name():
+                FinLogger.warn(f"Database contain unknown table {table[0]} !")
+                
+        if ASSET_TABLE.name() not in [x[0] for x in tables]:
+            return False
+
+        return True
+     
     def insert_asset(self, data:dict):
         insert_keys = []
         insert_values = []

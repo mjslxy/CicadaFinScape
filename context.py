@@ -20,6 +20,11 @@ class FinContext:
         self.acc:dict[str,Account] = {}
         self.load_config_file(config_path)
     
+    def validate_db(self):
+        with self.fsql as s:
+            return s.validate_db()
+        
+    
     def clear_config(self):
         self.config.clear()
         self.cat_dict.clear()
@@ -80,12 +85,19 @@ class FinContext:
         with open(self.config_path, 'w') as f:
             json.dump(config, f, indent=4)
     
-    def init_db_from_csv(self, csv_path):
+    def init_db(self):
         with self.fsql as s:
             s.clear_db()
             s.initial_db()
+
+    def load_from_csv(self, csv_path):
+        with self.fsql as s:
             s.load_from_csv(csv_path)
     
+    def init_db_from_csv(self, csv_path):
+        self.init_db()
+        self.load_from_csv()
+
     def asset_table(self):
         cols = ["DATE", "ACCOUNT", "NAME", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]
         with self.fsql as s:

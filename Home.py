@@ -24,13 +24,24 @@ if not os.path.exists(data_dir):
     os.chmod(data_dir, 0o777)
 
 config_path = os.path.join(data_dir, "config.json")
-data_path = os.path.join(data_dir, "data.csv")
-db_path = os.path.join(data_dir, "db")
-db_path = os.path.join(db_path, "test.db")
+csv_path = os.path.join(data_dir, "data.csv")
+db_path = os.path.join(data_dir, "test.db")
 
+# Init context
 context = FinContext(config_path, db_path)
 st.session_state['context'] = context
-#context.init_db_from_csv(data_path)
+
+@st.experimental_dialog("Your database is not valid")
+def init_db():
+    st.write("# Initialize your database? All of the data in database will be reset and can not recover")
+    if st.button("Confirm", key = "initial_reset_dia_confirm"):
+        context:FinContext = st.session_state['context']
+        context.init_db()
+        st.rerun()
+
+if not context.validate_db():
+    init_db()
+    st.stop()
 
 @st.experimental_dialog("RESET DATA TO SAMPLE DATA")
 def reset_sample_data_dia():

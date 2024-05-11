@@ -11,4 +11,6 @@ class FinLogger:
     def error(s:str):
         e = RuntimeError(s)
         st.exception(e)
+    def warn(s):
+        st.warning(s)
         
