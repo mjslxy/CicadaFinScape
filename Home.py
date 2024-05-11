@@ -18,9 +18,14 @@ st.sidebar.success("Sidebar")
 
 curr_path = __file__
 curr_dir = os.path.dirname(curr_path)
-config_path = os.path.join(curr_dir, "config.json")
-data_path = os.path.join(curr_dir, "data.csv")
-db_path = os.path.join(curr_dir, "db")
+data_dir = os.path.join(curr_dir, "data")
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir, mode=0o777, exist_ok = True)
+    os.chmod(data_dir, 0o777)
+
+config_path = os.path.join(data_dir, "config.json")
+data_path = os.path.join(data_dir, "data.csv")
+db_path = os.path.join(data_dir, "db")
 db_path = os.path.join(db_path, "test.db")
 
 context = FinContext(config_path, db_path)
