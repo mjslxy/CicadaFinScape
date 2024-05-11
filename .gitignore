@@ -3,12 +3,15 @@
 *.pyo
 *.pyd
 __pycache__/
+*.ipynb
 
 # Editor files
 *.swp
 .history/
 .vscode/
 .vs/
+.streamlit/
+db/
 
 # GDB files
 .gdb_history

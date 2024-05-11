@@ -97,6 +97,9 @@ class Account:
     def add_to_df(self, df:pd.DataFrame):
         for asset in self.asset_list:
             asset.add_to_df(df)
+    def asset(self, asset_name):
+        asset = next(filter(self.asset_list, lambda x: x.name == asset_name), None)
+        return asset
             
 
 class AssetTable:
@@ -147,7 +150,7 @@ class FinSQL:
             if c.type == "TEXT":
                 insert_values.append(f"'{data[k]}'")
             else:
-                insert_values.append(data[k])
+                insert_values.append(str(data[k]))
         for k in ASSET_TABLE.ex_cols():
             if k in data:
                 insert_keys.append(data[k])
@@ -155,6 +158,9 @@ class FinSQL:
         value_str = ', '.join(insert_values)
         execute_str = f"INSERT INTO {ASSET_TABLE.name()} ({key_str}) VALUES ({value_str});"
         self.exec(execute_str)
+    
+    def commit(self):
+        self.db.commit()
     
     def load_from_csv(self, csv_path):
         with open(csv_path, 'r') as f:
@@ -168,17 +174,16 @@ class FinSQL:
         self.db.commit()
 
     def query_asset(self, acc_name, name):
-        pass
+        results = self.exec(f'''SELECT * from {ASSET_TABLE.name()} WHERE ACCOUNT = "{acc_name}" and NAME = "{name}"''')
+        return results
     
     def query_all_asset(self):
         results = self.exec(f"SELECT * from {ASSET_TABLE.name()}").fetchall()
         return results
 
-        
-            
-        
-        
-
+    def delete_asset(self, acc_name, name):
+        self.exec(f'''DELETE FROM {ASSET_TABLE.name()} WHERE ACCOUNT = "{acc_name}" and NAME = "{name}"''')
+    
             
         
             

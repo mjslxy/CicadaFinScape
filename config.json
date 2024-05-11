@@ -7,23 +7,122 @@
     },
     "Accounts": [
         {
-            "Name": "NVIDIA"
+            "Name": "ABCD Bank"
         },
         {
-            "Name": "THS"
+            "Name": "Binance"
+        },
+        {
+            "Name": "IB"
+        },
+        {
+            "Name": "A Share"
+        },
+        {
+            "Name": "Housing Fund"
+        },
+        {
+            "Name": "Alipay"
+        },
+        {
+            "Name": "BCDE Bank"
         }
     ],
     "Assets": [
         {
-            "Name": "NVIDIA",
-            "Account": "NVIDIA",
+            "Name": "Current",
+            "Account": "ABCD Bank",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Credit",
+            "Account": "ABCD Bank",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Bond",
+            "Account": "ABCD Bank",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Crypto",
+            "Account": "Binance",
             "Category": {
                 "Risk": "High"
             }
         },
         {
-            "Name": "A-share",
-            "Account": "THS",
+            "Name": "Equity",
+            "Account": "IB",
+            "Category": {
+                "Risk": "High"
+            }
+        },
+        {
+            "Name": "Bond",
+            "Account": "IB",
+            "Category": {
+                "Risk": "High"
+            }
+        },
+        {
+            "Name": "A Share",
+            "Account": "A Share",
+            "Category": {
+                "Risk": "High"
+            }
+        },
+        {
+            "Name": "Housing Fund",
+            "Account": "Housing Fund",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Current",
+            "Account": "Alipay",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Credit",
+            "Account": "Alipay",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Fund",
+            "Account": "Alipay",
+            "Category": {
+                "Risk": "High"
+            }
+        },
+        {
+            "Name": "Current",
+            "Account": "BCDE Bank",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "Credit",
+            "Account": "BCDE Bank",
+            "Category": {
+                "Risk": "Low"
+            }
+        },
+        {
+            "Name": "WMP",
+            "Account": "BCDE Bank",
             "Category": {
                 "Risk": "High"
             }

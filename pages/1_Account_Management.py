@@ -44,7 +44,7 @@ df = st.data_editor(
 )
 col1, col2= st.columns([2,11])
 with col1:
-    st.button("Commit", on_click=FinContext.category_from_df, args=(context, df), type="primary", key="acc_cat_df_commit")
+    st.button("Submit", on_click=FinContext.category_from_df, args=(context, df), type="primary", key="acc_cat_df_submit")
 with col2:
     if st.button("Reset"):
         k_incre_all()
@@ -84,4 +84,4 @@ else:
         num_rows="dynamic",
         column_config=col_config
     )
-    st.button("Commit", on_click=FinContext.account_from_df, args=(context, df), type="primary", key="acc_acc_df_commit")
+    st.button("Submit", on_click=FinContext.account_from_df, args=(context, df), type="primary", key="acc_acc_df_submit")

@@ -1,20 +1,34 @@
 import json
+import os
+import copy
 import csv
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from finsql import Account,AssetItem,FinSQL,ASSET_TABLE
+from st_utils import FinLogger
+
+
 
 class FinContext:
     def __init__(self, config_path, db_path):
         self.config_path = config_path
         self.db_path = db_path
-        with open(config_path) as f:
-            self.config = json.load(f)
-        self.cat_dict:dict = {}
-        self.acc:dict[str,Account] = {}
         self.fsql = FinSQL(self.db_path)
+        self.config:dict = {}
+        self.cat_dict:dict[str, list[str]] = {}
+        self.acc:dict[str,Account] = {}
+        self.load_config_file(config_path)
+    
+    def clear_config(self):
+        self.config.clear()
+        self.cat_dict.clear()
+        self.acc.clear()
 
+    def load_config(self, config:dict):
+        self.clear_config()
+        self.config = config
         if "Categories" in self.config:
             self.cat_dict = self.config["Categories"]
         
@@ -25,7 +39,8 @@ class FinContext:
         if "Assets" in self.config:
             for i in self.config["Assets"]:
                 acc_name = i["Account"]
-                assert(acc_name in self.acc)
+                if acc_name not in self.acc:
+                    FinLogger.error(f"Doesn't find account f{acc_name}")
                 acc = self.acc[acc_name]
                 asset = AssetItem(i["Name"], acc)
                 if "Category" in i:
@@ -33,6 +48,11 @@ class FinContext:
                         assert(cat in self.cat_dict and type in self.cat_dict[cat])
                         asset.add_cat(cat,type)
                 acc.add_asset(asset)
+
+    def load_config_file(self, config_path):
+        with open(config_path) as f:
+            config = json.load(f)
+        self.load_config(config)
     
     def write_config(self):
         config = {}
@@ -119,10 +139,71 @@ class FinContext:
             asset.add_cat(k,v)
         acc.add_asset(asset)
         self.write_config()
+    
+    def asset_df(self, acc_name, asset_name):
+        cols = ["DATE", "ACCOUNT", "NAME", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]
+        with self.fsql as s:
+            r = s.query_asset(acc_name, asset_name)
+            df = pd.DataFrame(r, columns=cols)
+        df["ASSET"] = df['ACCOUNT'] + '-' + df['NAME']
+        df = df[["DATE", "ASSET", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]]
+        return df
+    
+    def delete_asset(self, acc_name, asset_name):
+        with self.fsql as s:
+            s.delete_asset(acc_name, asset_name)
+
+        if acc_name not in self.acc:
+            return
+        acc = self.acc[acc_name]
+        acc.asset_list = [x for x in acc.asset_list if x.name != asset_name]
+        self.write_config()
+    
+    def initialize_with_sample_data(self):
+        def generate_data(range:list[pd.Period], risk, seed):
+            np.random.seed(seed)
+            init_value = np.random.uniform(5000, 100000)
+            invest_low = np.random.uniform(200, 3000)
+            invest_high = np.random.uniform(invest_low, invest_low * 5)
+            invest_list = np.random.uniform(invest_low, invest_high, len(range - 1))
+
+            profit_percent_limit = np.random.uniform(0.2, 0.8)
+            profit_percent_list = np.random.uniform(-profit_percent_limit, profit_percent_limit, len(range - 1))
+
+            last_value = (range[0].strftime("%Y-%m"), init_value, 0, 0)
+            r = [last_value]
+            for i, p in enumerate(range[1:]):
+                profit = last_value[1] * profit_percent_list[i]
+                invest = invest_list[i]
+                net_worth = last_value[1] + invest + profit
+                last_value = (p.strftime("%Y-%m"), net_worth, invest, profit)
+                r.append(last_value)
+            return r
             
+        curr_path = __file__
+        curr_dir = os.path.dirname(curr_path)
+        config_path = os.path.join(curr_dir, "sample_config.json")
+        self.load_config_file(config_path)
+        self.write_config()
+
+        with self.fsql as s:
+            s.clear_db()
+            s.initial_db()
+        
+        period_range = pd.period_range(start = "3/1/2020", end = "2/1/2024", freq='M')
+        with self.fsql as s:
+            seed = 0
+            for k,v in self.acc.items():
+                for ass in v.asset_list:
+                    r = ass.cats["Risk"] if "Risk" in ass.cats else "Low"
+                    data:list[list] = generate_data(period_range, r, seed)
+                    seed += 1
+                    for i in data:
+                        d = list(i)
+                        d.insert(1, ass.name)
+                        d.insert(1, v.name)
+                        insert_data = {x.name:y for x,y in zip(ASSET_TABLE.ess_cols(), d)}
+                        s.insert_asset(insert_data)
+            s.commit()
             
-        
-        
-            
-        
-        
+                        
