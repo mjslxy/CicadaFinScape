@@ -99,7 +99,8 @@ class FinContext:
         self.load_from_csv()
 
     def asset_table(self):
-        cols = ["DATE", "ACCOUNT", "NAME", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]
+        #cols = ["DATE", "ACCOUNT", "NAME", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]
+        cols = ASSET_TABLE.cols_name()
         with self.fsql as s:
             r = s.query_all_asset()
             df = pd.DataFrame(r, columns=cols)
@@ -108,12 +109,63 @@ class FinContext:
         df = df[["DATE", "ASSET", "NET_WORTH"]]
         return df
     
-    def asset_chart(self):
+    def combine_acc_ass(df):
+        df["ASSET"] = df['ACCOUNT'] + '-' + df['NAME']
+        return df
+    
+    def query_date(self, date):
+        with self.fsql as s:
+            r = s.query_date(date)
+            df = pd.DataFrame(r, columns=ASSET_TABLE.cols_name())
+        return df
+    
+    def overview_chart(self):
         df = self.asset_table()
         df_sum = df.copy()
         df_sum = df_sum.groupby("DATE")["NET_WORTH"].sum().reset_index()
+        df_sum.rename(columns={"NET_WORTH": "TOTAL_NET_WORTH"}, inplace=True)
         fig = px.line(df, x='DATE', y='NET_WORTH', color="ASSET")
-        fig.add_bar(x=df_sum["DATE"], y=df_sum["NET_WORTH"], name="TOTAL")
+        # TODO - add secondary y
+        # fig = go.Figure(fig)
+        # fig.add_trace(
+        #     go.Bar(x=df_sum["DATE"], y=df_sum["TOTAL_NET_WORTH"], name="TOTAL"),
+        #     secondary_y=True
+        # )
+        # fig.update_layout(title_text="Wealth Overview")
+        # fig.update_yaxes(title_text="<b>primary</b> Per Asset Net Worth", secondary_y=False)
+        # fig.update_yaxes(title_text="<b>secondary</b> Total Net Worth", secondary_y=True)
+        fig.add_bar(x=df_sum["DATE"], y=df_sum["TOTAL_NET_WORTH"], name="TOTAL")
+        return fig
+    
+    def get_latest_date(self):
+        with self.fsql as f:
+            r = f.query_col(["DATE"])
+            df = pd.DataFrame(r, columns=["DATE"])
+        latest = df["DATE"].max()
+        return latest
+    
+    def allocation_pie(self, date = None):
+        date = self.get_latest_date() if date is None else date
+        df = self.query_date(date)
+        df = FinContext.combine_acc_ass(df)
+        fig = px.pie(df, values="NET_WORTH", names="ASSET", title=f"{date} Asset Allocation")
+        return fig
+    
+    def category_pie(self, cat:str, date:str = None):
+        date = self.get_latest_date() if date is None else date
+        df = self.query_date(date)
+        if cat not in self.cat_dict:
+            FinLogger.error(f"{cat} is not in category config")
+        
+        def assign_cat(row):
+            acc_name = row["ACCOUNT"]
+            ass_name = row["NAME"]
+            asset:AssetItem = self.get_asset(acc_name, ass_name)
+            return asset.cats.get(cat)
+
+        df[cat] = df.apply(assign_cat, axis=1)
+        df_sum = df.groupby(cat)["NET_WORTH"].sum().reset_index()
+        fig = px.pie(df_sum, values="NET_WORTH", names=cat, title=f"{date} CATEGORY {cat} Distribution")
         return fig
     
     def account_df(self):
@@ -133,7 +185,6 @@ class FinContext:
                 for asset in acc.asset_list:
                     if asset.name == asset_name:
                         pass
-                
     
     def category_df(self):
         cat = [[k, ','.join(v)] for k,v in self.cat_dict.items()]
@@ -168,6 +219,12 @@ class FinContext:
         df["ASSET"] = df['ACCOUNT'] + '-' + df['NAME']
         df = df[["DATE", "ASSET", "NET_WORTH", "MONTH_INVEST", "MONTH_PROFIT"]]
         return df
+    
+    def get_asset(self, acc_name, asset_name):
+        if acc_name not in self.acc:
+            return None
+        acc = self.acc[acc_name]
+        return acc.asset(asset_name)
     
     def delete_asset(self, acc_name, asset_name):
         with self.fsql as s:

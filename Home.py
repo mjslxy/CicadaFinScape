@@ -55,5 +55,15 @@ with st.sidebar:
     if st.button("Reset to Sample data", key="side_bar_reset_button"):
         reset_sample_data_dia()
 
-chart = context.asset_chart()
-st.plotly_chart(chart, theme="streamlit", use_container_width=True)
+overview_chart = context.overview_chart()
+st.plotly_chart(overview_chart, theme="streamlit", use_container_width=True)
+
+allocation_pie = context.allocation_pie()
+st.plotly_chart(allocation_pie, theme="streamlit", use_container_width=True)
+
+cat_list = list(context.cat_dict.keys())
+tabs = st.tabs(cat_list)
+for i,tab in enumerate(tabs):
+    with tab:
+        category_pie = context.category_pie(cat_list[i])
+        st.plotly_chart(category_pie, theme="streamlit", use_container_width=True)

@@ -32,6 +32,9 @@ class SQLTableDef:
         ess_cols_str = ',\n'.join([x.name for x in self.ess_cols()])
         return ess_cols_str
     
+    def cols_name(self):
+        return [x.name for x in self.ess_cols()]
+    
     def create_table_str(self):
         ess_col_def = ',\n'.join([x.col_def_str() for x in self.ess_cols()])
         ex_col_def = ',\n'.join([x.col_def_str() for x in self.ex_cols()])
@@ -99,7 +102,7 @@ class Account:
         for asset in self.asset_list:
             asset.add_to_df(df)
     def asset(self, asset_name):
-        asset = next(filter(self.asset_list, lambda x: x.name == asset_name), None)
+        asset = next(filter(lambda x: x.name == asset_name, self.asset_list), None)
         return asset
             
 
@@ -192,9 +195,18 @@ class FinSQL:
     def query_all_asset(self):
         results = self.exec(f"SELECT * from {ASSET_TABLE.name()}").fetchall()
         return results
+    
+    def query_date(self, date):
+        results = self.exec(f'''SELECT * from {ASSET_TABLE.name()} WHERE DATE = "{date}"''').fetchall()
+        return results
 
     def delete_asset(self, acc_name, name):
         self.exec(f'''DELETE FROM {ASSET_TABLE.name()} WHERE ACCOUNT = "{acc_name}" and NAME = "{name}"''')
+    
+    def query_col(self, cols):
+        col_str = ", ".join(cols)
+        results = self.exec(f'''SELECT {col_str} from {ASSET_TABLE.name()}''').fetchall()
+        return results
     
             
         
