@@ -9,11 +9,11 @@ from context import FinContext
 import streamlit as st
 
 st.set_page_config(
-    page_title="Monthly Financial Dashboard",
+    page_title="Cicada Financial Scape",
     page_icon="👋"
 )
 
-st.write("# Welcome to Monthly Financial Dashboard!")
+st.write("# Welcome to Cicada Financial Scape!")
 st.sidebar.success("Sidebar")
 
 curr_path = __file__
