@@ -180,11 +180,19 @@ class FinContext:
         for index, row in df.iterrows():
             acc_name = row["Account"]
             asset_name = row["Name"]
-            if acc_name in self.acc:
-                acc = self.acc[acc_name]
-                for asset in acc.asset_list:
-                    if asset.name == asset_name:
-                        pass
+            if acc_name not in self.acc:
+                self.acc[acc_name] = Account(acc_name)
+            acc = self.acc[acc_name]
+            
+            asset = acc.asset(asset_name)
+            if asset is None:
+                asset = AssetItem(asset_name, acc)
+                acc.add_asset(asset)
+            
+            for k,v in row.items():
+                if k in self.cat_dict:
+                    asset.add_cat(k, v)
+        self.write_config()
     
     def category_df(self):
         cat = [[k, ','.join(v)] for k,v in self.cat_dict.items()]
