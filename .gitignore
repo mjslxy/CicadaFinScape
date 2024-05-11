@@ -10,8 +10,6 @@ __pycache__/
 .history/
 .vscode/
 .vs/
-.streamlit/
-db/
 
 # GDB files
 .gdb_history
@@ -19,3 +17,7 @@ db/
 # dot files
 *.dot
 
+# project ignore
+.streamlit/
+db/
+config.json
