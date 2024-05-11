@@ -10,7 +10,6 @@ from finsql import Account,AssetItem,FinSQL,ASSET_TABLE
 from st_utils import FinLogger
 
 
-
 class FinContext:
     def __init__(self, config_path, db_path):
         self.config_path = config_path
@@ -50,9 +49,18 @@ class FinContext:
                 acc.add_asset(asset)
 
     def load_config_file(self, config_path):
-        with open(config_path) as f:
-            config = json.load(f)
-        self.load_config(config)
+        if os.path.exists(config_path):
+            with open(config_path) as f:
+                config = json.load(f)
+            self.load_config(config)
+        else:
+            config = {
+                "Categories" : [],
+                "Accounts" : [],
+                "Assets": []
+            }
+            self.load_config(config)
+            self.write_config()
     
     def write_config(self):
         config = {}
